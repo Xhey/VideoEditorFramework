@@ -1,0 +1,2 @@
+[workspace]
+members = ["xhey_codec", "rust_ffmpeg"]

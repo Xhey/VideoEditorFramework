@@ -1,0 +1,27 @@
+[package]
+name = "xhey_codec"
+version = "0.1.0"
+authors = ["liangtai0035@sina.cn"]
+edition = "2018"
+
+[dependencies]
+lazy_static = "1.1.0"
+libc = { version = "0.2.43", default-features = false }
+log = "0.4.5"
+fnv = "1.0.6"
+jni = { version = "0.10.1", default-features = false }
+arrayvec = { version = "0.4.7", features = ["use_union"]}
+rust_ffmpeg = { path = "../rust_ffmpeg" }
+
+[target.'cfg(target_os = "android")'.dependencies]
+android_logger = "0.6.0"
+
+[lib]
+name = "xhey_codec"
+crate-type = ["cdylib"]
+
+[profile.release]
+lto = true
+codegen-units = 1
+incremental = false
+opt-level = "z"

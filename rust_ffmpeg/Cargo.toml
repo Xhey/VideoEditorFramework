@@ -1,0 +1,12 @@
+[package]
+name = "rust_ffmpeg"
+version = "0.1.0"
+authors = ["liangtai0035@sina.cn"]
+edition = "2018"
+build = "build.rs"
+
+[dependencies]
+libc = { version = "0.2.43", default-features = false }
+
+[build-dependencies]
+dunce = "0.1.1"
