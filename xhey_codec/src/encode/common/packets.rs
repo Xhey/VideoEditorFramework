@@ -1,7 +1,7 @@
 use std::collections::VecDeque;
 use std::sync::{Arc, Mutex, Condvar};
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Debug)]
 pub struct AudioPacket {
     pub samples: Vec<i16>,
     pub size: usize

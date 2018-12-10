@@ -1,5 +1,6 @@
 use std::sync::mpsc::Sender;
 use super::packets::*;
+
 pub struct RecordProcessor {
     // 发送器 这里我们使用Rust的异步管道做缓冲
     sender: Sender<AudioPacket>,
@@ -35,36 +36,35 @@ impl RecordProcessor {
         }
     }
 
-    fn cpy_to_audio_samples(&mut self, mut source_buffer: Vec<i16>, size: usize) {
-        let slice: Vec<_> = source_buffer.drain(0..size).collect();
+    fn cpy_to_audio_samples(&mut self, mut source_buffer: Vec<i16>, start: usize, size: usize) {
+        let slice: Vec<_> = source_buffer.drain(start..size).collect();
         self.audio_samples.copy_from_slice(&slice);
     }
     /// 将采样数据构造成AudioPacket并发送到异步队列
-    fn flush_audio_buffer_to_queue(&mut self) {
-
-    }
+    fn flush_audio_buffer_to_queue(&mut self) {}
 
     pub fn push_audio_buffer_to_queue(&mut self, samples: Vec<i16>, size: usize) -> usize {
-        if let r = size <= 0 {
+        if size <= 0 {
             return size;
-        };
-        let mut samples_cursor = 0;
-        let mut samples_cnt = size;
-        while samples_cnt > 0 {
-            if (self.audio_samples_cursor + samples_cnt) < self.audio_buf {
-                self.cpy_to_audio_samples(samples, samples_cnt);
-                self.audio_samples_cursor += samples_cnt;
-                samples_cursor += samples_cnt;
-                samples_cnt = 0;
-            } else {
-                let sub_full_size = self.audio_buffer_size - self.audio_samples_cursor;
-                self.cpy_to_audio_samples(samples + samples_cursor, sub_full_size);
-                self.audio_samples_cursor += sub_full_size;
-                samples_cursor += sub_full_size;
-                samples_cnt -= sub_full_size;
-                self.flush_audio_buffer_to_queue();
+        } else {
+            let mut samples_cursor = 0;
+            let mut samples_cnt = size;
+            while samples_cnt > 0 {
+                if (self.audio_samples_cursor + samples_cnt) < self.audio_buffer_size {
+                    self.cpy_to_audio_samples(samples.clone(), 0, samples_cnt);
+                    self.audio_samples_cursor += samples_cnt;
+                    samples_cursor += samples_cnt;
+                    samples_cnt = 0;
+                } else {
+                    let sub_full_size = self.audio_buffer_size - self.audio_samples_cursor;
+                    self.cpy_to_audio_samples(samples.clone(), samples_cursor, sub_full_size);
+                    self.audio_samples_cursor += sub_full_size;
+                    samples_cursor += sub_full_size;
+                    samples_cnt -= sub_full_size;
+                    self.flush_audio_buffer_to_queue();
+                }
             }
+            return size;
         }
-        size
     }
 }
