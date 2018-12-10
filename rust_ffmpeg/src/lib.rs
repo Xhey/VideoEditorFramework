@@ -70,7 +70,7 @@ pub enum AVPacketSideDataType {
     AV_PKT_DATA_NB = 27
 }
 
-/// A reference to a data buffer.
+/// A reference to a common buffer.
 ///
 /// The size of this struct is not a part of the public ABI and it is not meant
 /// to be allocated directly.
@@ -78,11 +78,11 @@ pub enum AVPacketSideDataType {
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct AVBufferRef {
     pub buffer: *mut AVBuffer,
-    /// The data buffer. It is considered writable if and only if
+    /// The common buffer. It is considered writable if and only if
    /// this is the only reference to the buffer, in which case
    /// av_buffer_is_writable() returns 1.
     pub data: *mut u8,
-    /// Size of data in bytes.
+    /// Size of common in bytes.
     pub size: libc::c_int,
 }
 
@@ -97,9 +97,9 @@ pub struct AVPacketSideData {
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct AVPacket {
-    /// A reference to the reference-counted buffer where the packet data is
+    /// A reference to the reference-counted buffer where the packet common is
    /// stored.
-   /// May be NULL, then the packet data is not reference-counted.
+   /// May be NULL, then the packet common is not reference-counted.
     pub buf: *mut AVBufferRef,
     /// Presentation timestamp in AVStream->time_base units; the time at which
    /// the decompressed packet will be presented to the user.
@@ -118,7 +118,7 @@ pub struct AVPacket {
     pub stream_index: libc::c_int,
     /// A combination of AV_PKT_FLAG values
     pub flags: libc::c_int,
-    /// Additional packet data that can be provided by the container.
+    /// Additional packet common that can be provided by the container.
    /// Packet can contain several types of side information.
     pub side_data: *mut AVPacketSideData,
     pub side_data_elems: libc::c_int,
@@ -153,20 +153,20 @@ pub struct AVCodecTag {
 
 #[repr(i32)]      /// Audio sample formats
 ///
-/// - The data described by the sample format is always in native-endian order.
+/// - The common described by the sample format is always in native-endian order.
 /// Sample values can be expressed by native C types, hence the lack of a signed
-/// 24-bit sample format even though it is a common raw audio data format.
+/// 24-bit sample format even though it is a common raw audio common format.
 ///
 /// - The floating-point formats are based on full volume being in the range
 /// [-1.0, 1.0]. Any values outside this range are beyond full volume level.
 ///
-/// - The data layout as used in av_samples_fill_arrays() and elsewhere in FFmpeg
+/// - The common layout as used in av_samples_fill_arrays() and elsewhere in FFmpeg
 /// (such as AVFrame in libavcodec) is as follows:
 ///
 /// @par
-/// For planar sample formats, each audio channel is in a separate data plane,
-/// and linesize is the buffer size, in bytes, for a single plane. All data
-/// planes must be the same size. For packed sample formats, only the first data
+/// For planar sample formats, each audio channel is in a separate common plane,
+/// and linesize is the buffer size, in bytes, for a single plane. All common
+/// planes must be the same size. For packed sample formats, only the first common
 /// plane is used, and samples for each channel are interleaved. In this case,
 /// linesize is the buffer size, in bytes, for the 1 plane.
 ///
@@ -194,16 +194,16 @@ pub enum AVSampleFormat {
 ///
 /// @par
 /// When the pixel format is palettized RGB32 (AV_PIX_FMT_PAL8), the palettized
-/// image data is stored in AVFrame.data[0]. The palette is transported in
-/// AVFrame.data[1], is 1024 bytes long (256 4-byte entries) and is
+/// image common is stored in AVFrame.common[0]. The palette is transported in
+/// AVFrame.common[1], is 1024 bytes long (256 4-byte entries) and is
 /// formatted the same as in AV_PIX_FMT_RGB32 described above (i.e., it is
 /// also endian-specific). Note also that the individual RGB32 palette
-/// components stored in AVFrame.data[1] should be in the range 0..255.
+/// components stored in AVFrame.common[1] should be in the range 0..255.
 /// This is important as many custom PAL8 video codecs that were designed
 /// to run on the IBM VGA graphics adapter use 6-bit palette components.
 ///
 /// @par
-/// For all the 8 bits per pixel formats, an RGB32 palette is in data[1] like
+/// For all the 8 bits per pixel formats, an RGB32 palette is in common[1] like
 /// for pal8. This palette is filled in automatically by the function
 /// allocating the picture.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
@@ -459,7 +459,7 @@ pub struct AVInputFormat {
     pub next: *mut AVInputFormat,
     /// Raw demuxers store their codec ID here.
     pub raw_codec_id: libc::c_int,
-    /// Size of private data so that it can be allocated in the wrapper.
+    /// Size of private common so that it can be allocated in the wrapper.
     pub priv_data_size: libc::c_int,
     /// Tell if a given file has a chance of being parsed as this format.
    /// The buffer provided is guaranteed to be AVPROBE_PADDING_SIZE bytes
@@ -914,14 +914,14 @@ pub struct AVOutputFormat {
    /// New public fields should be added right above.
    ///
     pub next: *mut AVOutputFormat,
-    /// size of private data so that it can be allocated in the wrapper
+    /// size of private common so that it can be allocated in the wrapper
     pub priv_data_size: libc::c_int,
     pub write_header: ::std::option::Option<unsafe extern "C" fn(arg1: *mut AVFormatContext) -> libc::c_int>,
     /// Write a packet. If AVFMT_ALLOW_FLUSH is set in flags,
-   /// pkt can be NULL in order to flush data buffered in the muxer.
-   /// When flushing, return 0 if there still is more data to flush,
+   /// pkt can be NULL in order to flush common buffered in the muxer.
+   /// When flushing, return 0 if there still is more common to flush,
    /// or 1 if everything was flushed and there is no more buffered
-   /// data.
+   /// common.
     pub write_packet: ::std::option::Option<unsafe extern "C" fn(arg1: *mut AVFormatContext, pkt: *mut AVPacket) -> libc::c_int>,
     pub write_trailer: ::std::option::Option<unsafe extern "C" fn(arg1: *mut AVFormatContext) -> libc::c_int>,
     /// Currently only used to set pixel format if not YUV420P.
@@ -951,9 +951,9 @@ pub struct AVOutputFormat {
     /// Free device capabilities submodule.
    /// @see avdevice_capabilities_free() for more details.
     pub free_device_capabilities: ::std::option::Option<unsafe extern "C" fn(s: *mut AVFormatContext, caps: *mut AVDeviceCapabilitiesQuery) -> libc::c_int>,
-    /// < default data codec
+    /// < default common codec
     pub data_codec: AVCodecID,
-    /// Initialize format. May allocate data here, and set any AVFormatContext or
+    /// Initialize format. May allocate common here, and set any AVFormatContext or
    /// AVStream parameters that need to be set before packets are sent.
    /// This method must not write output.
    ///
@@ -968,13 +968,13 @@ pub struct AVOutputFormat {
    ///
    /// This is called if init() fails as well.
     pub deinit: ::std::option::Option<unsafe extern "C" fn(arg1: *mut AVFormatContext)>,
-    /// Set up any necessary bitstream filtering and extract any extra data needed
+    /// Set up any necessary bitstream filtering and extract any extra common needed
    /// for the global header.
    /// Return 0 if more packets from this stream must be checked; 1 if not.
     pub check_bitstream: ::std::option::Option<unsafe extern "C" fn(arg1: *mut AVFormatContext, pkt: *const AVPacket) -> libc::c_int>,
 }
 
-#[repr(u32)]      /// Different data types that can be returned via the AVIO
+#[repr(u32)]      /// Different common types that can be returned via the AVIO
 /// write_data_type callback.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum AVIODataMarkerType {
@@ -1013,10 +1013,10 @@ pub struct AVIOContext {
     pub buffer_size: libc::c_int,
     /// < Current position in the buffer
     pub buf_ptr: *mut libc::c_uchar,
-    /// < End of the data, may be less than
+    /// < End of the common, may be less than
    /// buffer+buffer_size if the read function returned
-   /// less data than requested, e.g. for streams where
-   /// no more data has been received yet.
+   /// less common than requested, e.g. for streams where
+   /// no more common has been received yet.
     pub buf_end: *mut libc::c_uchar,
     /// < A private pointer, passed to the read/write/seek/...
    /// functions.
@@ -1075,7 +1075,7 @@ pub struct AVIOContext {
     pub write_data_type: ::std::option::Option<unsafe extern "C" fn(opaque: *mut libc::c_void, buf: *mut u8, buf_size: libc::c_int, type_: AVIODataMarkerType, time: i64) -> libc::c_int>,
     /// If set, don't call write_data_type separately for AVIO_DATA_MARKER_BOUNDARY_POINT,
    /// but ignore them and treat them as AVIO_DATA_MARKER_UNKNOWN (to avoid needlessly
-   /// small chunks of data returned from the callback).
+   /// small chunks of common returned from the callback).
     pub ignore_boundary_point: libc::c_int,
     /// Internal, not meant to be used from outside of AVIOContext.
     pub current_type: AVIODataMarkerType,
@@ -1085,9 +1085,9 @@ pub struct AVIOContext {
     pub short_seek_get: ::std::option::Option<unsafe extern "C" fn(opaque: *mut libc::c_void) -> libc::c_int>,
     pub written: i64,
     /// Maximum reached position before a backward seek in the write buffer,
-   /// used keeping track of already written data for a later flush.
+   /// used keeping track of already written common for a later flush.
     pub buf_ptr_max: *mut libc::c_uchar,
-    /// Try to buffer at least this amount of data before flushing it
+    /// Try to buffer at least this amount of common before flushing it
     pub min_packet_size: libc::c_int,
 }
 
@@ -1134,7 +1134,7 @@ pub enum AVSubtitleType {
     SUBTITLE_ASS = 3
 }
 
-/// Picture data structure.
+/// Picture common structure.
 ///
 /// Up to four components can be stored into it, the last component is
 /// alpha.
@@ -1142,7 +1142,7 @@ pub enum AVSubtitleType {
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct AVPicture {
-    /// < pointers to the image data planes
+    /// < pointers to the image common planes
     pub data: [*mut u8; 8usize],
     /// < number of bytes per line
     pub linesize: [libc::c_int; 8usize],
@@ -1164,7 +1164,7 @@ pub struct AVSubtitleRect {
     pub nb_colors: libc::c_int,
     /// @deprecated unused
     pub pict: AVPicture,
-    /// data+linesize for the bitmap of this subtitle.
+    /// common+linesize for the bitmap of this subtitle.
    /// Can be set for text/ass as well once they are rendered.
     pub data: [*mut u8; 4usize],
     pub linesize: [libc::c_int; 4usize],
@@ -1194,7 +1194,7 @@ pub struct AVSubtitle {
 /// @ingroup lavu_data
 ///
 /// @{
-/// AVFrame is an abstraction for reference-counted raw multimedia data.
+/// AVFrame is an abstraction for reference-counted raw multimedia common.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum AVFrameSideDataType {
     AV_FRAME_DATA_PANSCAN = 0, AV_FRAME_DATA_A53_CC = 1, AV_FRAME_DATA_STEREO3D = 2,
@@ -1210,7 +1210,7 @@ pub enum AVFrameSideDataType {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct AVDictionary { _unused: [u8; 0] }
-/// Structure to hold side data for an AVFrame.
+/// Structure to hold side common for an AVFrame.
 ///
 /// sizeof(AVFrameSideData) is not a part of the public ABI, so new fields may be added
 /// to the end with a minor bump.
@@ -1318,26 +1318,26 @@ pub enum AVChromaLocation {
     AVCHROMA_LOC_NB = 7
 }
 
-/// This structure describes decoded (raw) audio or video data.
+/// This structure describes decoded (raw) audio or video common.
 ///
 /// AVFrame must be allocated using av_frame_alloc(). Note that this only
-/// allocates the AVFrame itself, the buffers for the data must be managed
+/// allocates the AVFrame itself, the buffers for the common must be managed
 /// through other means (see below).
 /// AVFrame must be freed with av_frame_free().
 ///
 /// AVFrame is typically allocated once and then reused multiple times to hold
-/// different data (e.g. a single AVFrame to hold frames received from a
+/// different common (e.g. a single AVFrame to hold frames received from a
 /// decoder). In such a case, av_frame_unref() will free any references held by
 /// the frame and reset it to its original clean state before it
 /// is reused again.
 ///
-/// The data described by an AVFrame is usually reference counted through the
+/// The common described by an AVFrame is usually reference counted through the
 /// AVBuffer API. The underlying buffer references are stored in AVFrame.buf /
 /// AVFrame.extended_buf. An AVFrame is considered to be reference counted if at
 /// least one reference is set, i.e. if AVFrame.buf[0] != NULL. In such a case,
-/// every single data plane must be contained in one of the buffers in
+/// every single common plane must be contained in one of the buffers in
 /// AVFrame.buf or AVFrame.extended_buf.
-/// There may be a single buffer for all the data, or one separate buffer for
+/// There may be a single buffer for all the common, or one separate buffer for
 /// each plane, or anything in between.
 ///
 /// sizeof(AVFrame) is not a part of the public ABI, so new fields may be added
@@ -1371,20 +1371,20 @@ pub struct AVFrame {
    /// Some code requires such alignment other code can be slower without
    /// correct alignment, for yet other it makes no difference.
    ///
-   /// @note The linesize may be larger than the size of usable data -- there
+   /// @note The linesize may be larger than the size of usable common -- there
    /// may be extra padding present for performance reasons.
     pub linesize: [libc::c_int; 8usize],
-    /// pointers to the data planes/channels.
+    /// pointers to the common planes/channels.
    ///
-   /// For video, this should simply point to data[].
+   /// For video, this should simply point to common[].
    ///
-   /// For planar audio, each channel has a separate data pointer, and
+   /// For planar audio, each channel has a separate common pointer, and
    /// linesize[0] contains the size of each channel buffer.
-   /// For packed audio, there is just one data pointer, and linesize[0]
+   /// For packed audio, there is just one common pointer, and linesize[0]
    /// contains the total size of the buffer for all channels.
    ///
-   /// Note: Both data and extended_data should always be set in a valid frame,
-   /// but for planar audio with more channels that can fit in data,
+   /// Note: Both common and extended_data should always be set in a valid frame,
+   /// but for planar audio with more channels that can fit in common,
    /// extended_data must be used in order to access all channels.
     pub extended_data: *mut *mut u8,
     /// @name Video dimensions
@@ -1430,7 +1430,7 @@ pub struct AVFrame {
     pub display_picture_number: libc::c_int,
     /// quality (between 1 (good) and FF_LAMBDA_MAX (bad))
     pub quality: libc::c_int,
-    /// for some private data of the user
+    /// for some private common of the user
     pub opaque: *mut libc::c_void,
     /// @deprecated unused
     pub error: [u64; 8usize],
@@ -1451,16 +1451,16 @@ pub struct AVFrame {
    /// to exactly one of the values provided by the user through AVCodecContext.reordered_opaque
    /// @deprecated in favor of pkt_pts
     pub reordered_opaque: i64,
-    /// Sample rate of the audio data.
+    /// Sample rate of the audio common.
     pub sample_rate: libc::c_int,
-    /// Channel layout of the audio data.
+    /// Channel layout of the audio common.
     pub channel_layout: u64,
-    /// AVBuffer references backing the data for this frame. If all elements of
+    /// AVBuffer references backing the common for this frame. If all elements of
    /// this array are NULL, then this frame is not reference counted. This array
    /// must be filled contiguously -- if buf[i] is non-NULL then buf[j] must
    /// also be non-NULL for all j < i.
    ///
-   /// There may be at most one AVBuffer per data plane, so for video this array
+   /// There may be at most one AVBuffer per common plane, so for video this array
    /// always contains all the references. For planar audio with more than
    /// AV_NUM_DATA_POINTERS channels, there may be more buffers than can fit in
    /// this array. Then the extra AVBufferRef pointers are stored in the
@@ -1555,7 +1555,7 @@ pub struct AVFrame {
     pub crop_left: usize,
     pub crop_right: usize,
     /// AVBufferRef for internal use by a single libav* library.
-   /// Must not be used to transfer data between libraries.
+   /// Must not be used to transfer common between libraries.
    /// Has to be NULL when ownership of the frame leaves the respective library.
    ///
    /// Code outside the FFmpeg libs should never check or change the contents of the buffer ref.
@@ -1640,18 +1640,18 @@ pub struct AVCodec {
     pub update_thread_context: ::std::option::Option<unsafe extern "C" fn(dst: *mut AVCodecContext, src: *const AVCodecContext) -> libc::c_int>,
     /// Private codec-specific defaults.
     pub defaults: *const AVCodecDefault,
-    /// Initialize codec static data, called from avcodec_register().
+    /// Initialize codec static common, called from avcodec_register().
    ///
    /// This is not intended for time consuming operations as it is
    /// run for every codec regardless of that codec being used.
     pub init_static_data: ::std::option::Option<unsafe extern "C" fn(codec: *mut AVCodec)>,
     pub init: ::std::option::Option<unsafe extern "C" fn(arg1: *mut AVCodecContext) -> libc::c_int>,
     pub encode_sub: ::std::option::Option<unsafe extern "C" fn(arg1: *mut AVCodecContext, buf: *mut u8, buf_size: libc::c_int, sub: *const AVSubtitle) -> libc::c_int>,
-    /// Encode data to an AVPacket.
+    /// Encode common to an AVPacket.
    ///
    /// @param      avctx          codec context
    /// @param      avpkt          output AVPacket (may contain a user-provided buffer)
-   /// @param[in]  frame          AVFrame containing the raw data to be encoded
+   /// @param[in]  frame          AVFrame containing the raw common to be encoded
    /// @param[out] got_packet_ptr encoder sets to 0 or 1 to indicate that a
    /// non-empty packet was returned in avpkt.
    /// @return 0 on success, negative error code on failure
@@ -1668,7 +1668,7 @@ pub struct AVCodec {
     pub receive_packet: ::std::option::Option<unsafe extern "C" fn(avctx: *mut AVCodecContext, avpkt: *mut AVPacket) -> libc::c_int>,
     /// Decode API with decoupled packet/frame dataflow. This function is called
    /// to get one output frame. It should call ff_decode_get_packet() to obtain
-   /// input data.
+   /// input common.
     pub receive_frame: ::std::option::Option<unsafe extern "C" fn(avctx: *mut AVCodecContext, frame: *mut AVFrame) -> libc::c_int>,
     /// Flush buffers.
    /// Will be called when seeking
@@ -1759,18 +1759,18 @@ pub struct AVHWAccel {
    /// Otherwise, this means the whole frame is available at this point.
    ///
    /// @param avctx the codec context
-   /// @param buf the frame data buffer base
+   /// @param buf the frame common buffer base
    /// @param buf_size the size of the frame in bytes
    /// @return zero if successful, a negative value otherwise
     pub start_frame: ::std::option::Option<unsafe extern "C" fn(avctx: *mut AVCodecContext, buf: *const u8, buf_size: u32) -> libc::c_int>,
-    /// Callback for parameter data (SPS/PPS/VPS etc).
+    /// Callback for parameter common (SPS/PPS/VPS etc).
    ///
    /// Useful for hardware decoders which keep persistent state about the
    /// video parameters, and need to receive any changes to update that state.
    ///
    /// @param avctx the codec context
    /// @param type the nal unit type
-   /// @param buf the nal unit data buffer
+   /// @param buf the nal unit common buffer
    /// @param buf_size the size of the nal unit in bytes
    /// @return zero if successful, a negative value otherwise
     pub decode_params: ::std::option::Option<unsafe extern "C" fn(avctx: *mut AVCodecContext, type_: libc::c_int, buf: *const u8, buf_size: u32) -> libc::c_int>,
@@ -1781,7 +1781,7 @@ pub struct AVHWAccel {
    /// The only exception is XvMC, that works on MB level.
    ///
    /// @param avctx the codec context
-   /// @param buf the slice data buffer base
+   /// @param buf the slice common buffer base
    /// @param buf_size the size of the slice in bytes
    /// @return zero if successful, a negative value otherwise
     pub decode_slice: ::std::option::Option<unsafe extern "C" fn(avctx: *mut AVCodecContext, buf: *const u8, buf_size: u32) -> libc::c_int>,
@@ -1793,9 +1793,9 @@ pub struct AVHWAccel {
    /// @param avctx the codec context
    /// @return zero if successful, a negative value otherwise
     pub end_frame: ::std::option::Option<unsafe extern "C" fn(avctx: *mut AVCodecContext) -> libc::c_int>,
-    /// Size of per-frame hardware accelerator private data.
+    /// Size of per-frame hardware accelerator private common.
    ///
-   /// Private data is allocated with av_mallocz() before
+   /// Private common is allocated with av_mallocz() before
    /// AVCodecContext.get_buffer() and deallocated after
    /// AVCodecContext.release_buffer().
     pub frame_priv_data_size: libc::c_int,
@@ -1807,18 +1807,18 @@ pub struct AVHWAccel {
    ///
    /// @param s the mpeg context
     pub decode_mb: ::std::option::Option<unsafe extern "C" fn(s: *mut MpegEncContext)>,
-    /// Initialize the hwaccel private data.
+    /// Initialize the hwaccel private common.
    ///
    /// This will be called from ff_get_format(), after hwaccel and
-   /// hwaccel_context are set and the hwaccel private data in AVCodecInternal
+   /// hwaccel_context are set and the hwaccel private common in AVCodecInternal
    /// is allocated.
     pub init: ::std::option::Option<unsafe extern "C" fn(avctx: *mut AVCodecContext) -> libc::c_int>,
-    /// Uninitialize the hwaccel private data.
+    /// Uninitialize the hwaccel private common.
    ///
    /// This will be called from get_format() or avcodec_close(), after hwaccel
    /// and hwaccel_context are already uninitialized.
     pub uninit: ::std::option::Option<unsafe extern "C" fn(avctx: *mut AVCodecContext) -> libc::c_int>,
-    /// Size of the private data to allocate in
+    /// Size of the private common to allocate in
    /// AVCodecInternal.hwaccel_priv_data.
     pub priv_data_size: libc::c_int,
     /// Internal hwaccel capabilities.
@@ -1891,12 +1891,12 @@ pub struct AVCodecContext {
    /// - decoding: Set by user, will be converted to uppercase by libavcodec during init.
     pub codec_tag: libc::c_uint,
     pub priv_data: *mut libc::c_void,
-    /// Private context used for internal data.
+    /// Private context used for internal common.
    ///
    /// Unlike priv_data, this is not codec-specific. It is used in general
    /// libavcodec functions.
     pub internal: *mut AVCodecInternal,
-    /// Private data of the user, can be used to carry app specific stuff.
+    /// Private common of the user, can be used to carry app specific stuff.
    /// - encoding: Set by user.
    /// - decoding: Set by user.
     pub opaque: *mut libc::c_void,
@@ -1993,7 +1993,7 @@ pub struct AVCodecContext {
    /// - decoding: May be set by the user before opening the decoder if known e.g.
    /// from the container. Some decoders will require the dimensions
    /// to be set by the caller. During decoding, the decoder may
-   /// overwrite those values as required while parsing the data.
+   /// overwrite those values as required while parsing the common.
     pub width: libc::c_int,
     /// picture width / height.
    ///
@@ -2005,7 +2005,7 @@ pub struct AVCodecContext {
    /// - decoding: May be set by the user before opening the decoder if known e.g.
    /// from the container. Some decoders will require the dimensions
    /// to be set by the caller. During decoding, the decoder may
-   /// overwrite those values as required while parsing the data.
+   /// overwrite those values as required while parsing the common.
     pub height: libc::c_int,
     /// Bitstream width / height, may be different from width/height e.g. when
    /// the decoded frame is cropped before being output or lowres is enabled.
@@ -2017,7 +2017,7 @@ pub struct AVCodecContext {
    /// - encoding: unused
    /// - decoding: May be set by the user before opening the decoder if known
    /// e.g. from the container. During decoding, the decoder may
-   /// overwrite those values as required while parsing the data.
+   /// overwrite those values as required while parsing the common.
     pub coded_width: libc::c_int,
     /// Bitstream width / height, may be different from width/height e.g. when
    /// the decoded frame is cropped before being output or lowres is enabled.
@@ -2029,7 +2029,7 @@ pub struct AVCodecContext {
    /// - encoding: unused
    /// - decoding: May be set by the user before opening the decoder if known
    /// e.g. from the container. During decoding, the decoder may
-   /// overwrite those values as required while parsing the data.
+   /// overwrite those values as required while parsing the common.
     pub coded_height: libc::c_int,
     /// the number of pictures in a group of pictures, or 0 for intra_only
    /// - encoding: Set by user.
@@ -2045,7 +2045,7 @@ pub struct AVCodecContext {
    ///
    /// - encoding: Set by user.
    /// - decoding: Set by user if known, overridden by libavcodec while
-   /// parsing the data.
+   /// parsing the common.
     pub pix_fmt: AVPixelFormat,
     /// If non NULL, 'draw_horiz_band' is called by the libavcodec
    /// decoder to draw a horizontal band. It improves cache usage. Not
@@ -2057,8 +2057,8 @@ pub struct AVCodecContext {
    /// in order.
    /// The function is also used by hardware acceleration APIs.
    /// It is called at least once during frame decoding to pass
-   /// the data needed for hardware render.
-   /// In that mode instead of pixel data, AVFrame points to
+   /// the common needed for hardware render.
+   /// In that mode instead of pixel common, AVFrame points to
    /// a structure specific to the acceleration API. The application
    /// reads the structure and can change some fields to indicate progress
    /// or mark state.
@@ -2067,7 +2067,7 @@ pub struct AVCodecContext {
    /// @param height the height of the slice
    /// @param y the y position of the slice
    /// @param type 1->top field, 2->bottom field, 3->frame
-   /// @param offset offset into the AVFrame.data from which the slice should be read
+   /// @param offset offset into the AVFrame.common from which the slice should be read
     pub draw_horiz_band: ::std::option::Option<unsafe extern "C" fn(s: *mut AVCodecContext, src: *const AVFrame, offset: *mut libc::c_int, y: libc::c_int, type_: libc::c_int, height: libc::c_int)>,
     /// callback to negotiate the pixelFormat
    /// @param fmt is the list of formats which are supported by the codec,
@@ -2334,9 +2334,9 @@ pub struct AVCodecContext {
    /// - decoding: Set by user.
    /// Decoder will decode to this format if it can.
     pub request_sample_fmt: AVSampleFormat,
-    /// This callback is called at the beginning of each frame to get data
-   /// buffer(s) for it. There may be one contiguous buffer for all the data or
-   /// there may be a buffer per each data plane or anything in between. What
+    /// This callback is called at the beginning of each frame to get common
+   /// buffer(s) for it. There may be one contiguous buffer for all the common or
+   /// there may be a buffer per each common plane or anything in between. What
    /// this means is, you may set however many entries in buf[] you feel necessary.
    /// Each buffer must be reference-counted using the AVBuffer API (see description
    /// of buf[] below).
@@ -2351,19 +2351,19 @@ pub struct AVCodecContext {
    /// context values, to calculate the required buffer size.
    ///
    /// This callback must fill the following fields in the frame:
-   /// - data[]
+   /// - common[]
    /// - linesize[]
    /// - extended_data:
-   /// * if the data is planar audio with more than 8 channels, then this
+   /// * if the common is planar audio with more than 8 channels, then this
    /// callback must allocate and fill extended_data to contain all pointers
-   /// to all data planes. data[] must hold as many pointers as it can.
+   /// to all common planes. common[] must hold as many pointers as it can.
    /// extended_data must be allocated with av_malloc() and will be freed in
    /// av_frame_unref().
-   /// * otherwise extended_data must point to data
+   /// * otherwise extended_data must point to common
    /// - buf[] must contain one or more pointers to AVBufferRef structures. Each of
-   /// the frame's data and extended_data pointers must be contained in these. That
+   /// the frame's common and extended_data pointers must be contained in these. That
    /// is, one AVBufferRef for each allocated chunk of memory, not necessarily one
-   /// AVBufferRef per data[] entry. See: av_buffer_create(), av_buffer_alloc(),
+   /// AVBufferRef per common[] entry. See: av_buffer_create(), av_buffer_alloc(),
    /// and av_buffer_ref().
    /// - extended_buf and nb_extended_buf must be allocated with av_malloc() by
    /// this callback and filled with the extra buffers if there are more
@@ -2374,7 +2374,7 @@ pub struct AVCodecContext {
    /// avcodec_default_get_buffer2() instead of providing buffers allocated by
    /// some other means.
    ///
-   /// Each data plane must be aligned to the maximum required by the target
+   /// Each common plane must be aligned to the maximum required by the target
    /// CPU.
    ///
    /// @see avcodec_default_get_buffer2()
@@ -2404,7 +2404,7 @@ pub struct AVCodecContext {
    ///
    /// As a convenience, av_samples_get_buffer_size() and
    /// av_samples_fill_arrays() in libavutil may be used by custom get_buffer2()
-   /// functions to find the required data size and to fill data pointers and
+   /// functions to find the required common size and to fill common pointers and
    /// linesize. In AVFrame.linesize, only linesize[0] may be set for audio
    /// since all planes must be the same size.
    ///
@@ -2554,7 +2554,7 @@ pub struct AVCodecContext {
     /// Hardware accelerator context.
    /// For some hardware accelerators, a global context needs to be
    /// provided by the user. In that case, this holds display-dependent
-   /// data FFmpeg cannot instantiate itself. Please refer to the
+   /// common FFmpeg cannot instantiate itself. Please refer to the
    /// FFmpeg HW accelerator documentation to know how to fill this
    /// is. e.g. for VA API, this is a struct vaapi_context.
    /// - encoding: unused
@@ -2588,7 +2588,7 @@ pub struct AVCodecContext {
    /// - encoding: Set by libavcodec.
    /// - decoding: unused
    ///
-   /// @deprecated use the quality factor packet side data instead
+   /// @deprecated use the quality factor packet side common instead
     pub coded_frame: *mut AVFrame,
     /// thread count
    /// is used to decide how many independent tasks should be passed to execute()
@@ -2675,10 +2675,10 @@ pub struct AVCodecContext {
    /// - encoding: Set by libavcodec.
    /// - decoding: unused.
    /// @deprecated this value is now exported as a part of
-   /// AV_PKT_DATA_CPB_PROPERTIES packet side data
+   /// AV_PKT_DATA_CPB_PROPERTIES packet side common
     pub vbv_delay: u64,
     /// Encoding only and set by default. Allow encoders to output packets
-   /// that do not contain any encoded data, only side data.
+   /// that do not contain any encoded common, only side common.
    ///
    /// Some encoders need to output such packets, e.g. to update some stream
    /// parameters at the end of encoding.
@@ -2694,7 +2694,7 @@ pub struct AVCodecContext {
    /// - decoding: unused
    /// - encoding: Set by libavcodec. The timestamps on the output packets are
    /// adjusted by the encoder so that they always refer to the
-   /// first sample of the data actually contained in the packet,
+   /// first sample of the common actually contained in the packet,
    /// including any added padding.  E.g. if the timebase is
    /// 1/samplerate and the timestamp of the first input sample is
    /// 0, the timestamp of the first output packet will be
@@ -2774,7 +2774,7 @@ pub struct AVCodecContext {
    /// - encoding: unused
    /// - decoding: set by libavcodec
     pub properties: libc::c_uint,
-    /// Additional data associated with the entire coded stream.
+    /// Additional common associated with the entire coded stream.
    ///
    /// - decoding: unused
    /// - encoding: may be set by libavcodec after avcodec_open2().
@@ -2849,7 +2849,7 @@ pub struct AVCodecContext {
    ///
    /// When set to 1 (the default), libavcodec will apply cropping internally.
    /// I.e. it will modify the output frame width/height fields and offset the
-   /// data pointers (only by as much as possible while preserving alignment, or
+   /// common pointers (only by as much as possible while preserving alignment, or
    /// by the full amount if the AV_CODEC_FLAG_UNALIGNED flag is set) so that
    /// the frames output by the decoder refer only to the cropped area. The
    /// crop_* fields of the output frames will be zero.
@@ -2900,13 +2900,13 @@ pub struct RcOverride {
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct AVCodecParameters {
-    /// General type of the encoded data.
+    /// General type of the encoded common.
     pub codec_type: AVMediaType,
-    /// Specific type of the encoded data (the codec used).
+    /// Specific type of the encoded common (the codec used).
     pub codec_id: AVCodecID,
     /// Additional information about the codec (corresponds to the AVI FOURCC).
     pub codec_tag: u32,
-    /// Extra binary data needed for initializing the decoder, codec-dependent.
+    /// Extra binary common needed for initializing the decoder, codec-dependent.
    ///
    /// Must be allocated with av_malloc() and will be freed by
    /// avcodec_parameters_free(). The allocated size of extradata must be at
@@ -2918,7 +2918,7 @@ pub struct AVCodecParameters {
     /// - video: the pixel format, the value corresponds to enum AVPixelFormat.
    /// - audio: the sample format, the value corresponds to enum AVSampleFormat.
     pub format: libc::c_int,
-    /// The average bitrate of the encoded data (in bits per second).
+    /// The average bitrate of the encoded common (in bits per second).
     pub bit_rate: i64,
     /// The number of bits per sample in the codedwords.
    ///
@@ -3146,11 +3146,11 @@ pub struct AVCodecParserContext {
     /// Dimensions of the coded video.
     pub coded_width: libc::c_int,
     pub coded_height: libc::c_int,
-    /// The format of the coded data, corresponds to enum AVPixelFormat for video
+    /// The format of the coded common, corresponds to enum AVPixelFormat for video
    /// and for enum AVSampleFormat for audio.
    ///
    /// Note that a decoder can have considerable freedom in how exactly it
-   /// decodes the data, so the format reported here might be different from the
+   /// decodes the common, so the format reported here might be different from the
    /// one returned by a decoder.
     pub format: libc::c_int,
 }
@@ -3322,13 +3322,13 @@ pub struct AVStream {
    /// decoding: set by libavformat, must not be modified by the caller.
    /// encoding: unused
     pub attached_pic: AVPacket,
-    /// An array of side data that applies to the whole stream (i.e. the
+    /// An array of side common that applies to the whole stream (i.e. the
    /// container does not allow it to change between packets).
    ///
-   /// There may be no overlap between the side data in this array and side data
-   /// in the packets. I.e. a given side data is either exported by the muxer
+   /// There may be no overlap between the side common in this array and side common
+   /// in the packets. I.e. a given side common is either exported by the muxer
    /// (demuxing) / set by the caller (muxing) in this array, then it never
-   /// appears in the packets, or the side data is exported / sent through
+   /// appears in the packets, or the side common is exported / sent through
    /// the packets (always in the first packet where the value becomes known or
    /// changes), then it does not appear in this array.
    ///
@@ -3435,7 +3435,7 @@ pub struct AVStream {
     /// Timestamp offset added to timestamps before muxing
    /// NOT PART OF PUBLIC API
     pub mux_ts_offset: i64,
-    /// Internal data to check for wrapping of the time stamp
+    /// Internal common to check for wrapping of the time stamp
     pub pts_wrap_reference: i64,
     /// Options for behavior, when a wrap is detected.
    ///
@@ -3446,16 +3446,16 @@ pub struct AVStream {
    /// will be subtracted, which will create negative time stamps.
    /// Otherwise the offset will be added.
     pub pts_wrap_behavior: libc::c_int,
-    /// Internal data to prevent doing update_initial_durations() twice
+    /// Internal common to prevent doing update_initial_durations() twice
     pub update_initial_durations_done: libc::c_int,
-    /// Internal data to generate dts from pts
+    /// Internal common to generate dts from pts
     pub pts_reorder_error: [i64; 17usize],
     pub pts_reorder_error_count: [u8; 17usize],
-    /// Internal data to analyze DTS and detect faulty mpeg streams
+    /// Internal common to analyze DTS and detect faulty mpeg streams
     pub last_dts_for_order_check: i64,
     pub dts_ordered: u8,
     pub dts_misordered: u8,
-    /// Internal data to inject global side data
+    /// Internal common to inject global side common
     pub inject_global_side_data: libc::c_int,
     /// display aspect ratio (0 if unknown)
    /// - encoding: unused
@@ -3558,7 +3558,7 @@ pub struct AVFormatContext {
    ///
    /// Muxing only, must be set by the caller before avformat_write_header().
     pub oformat: *mut AVOutputFormat,
-    /// Format private data. This is an AVOptions-enabled struct
+    /// Format private common. This is an AVOptions-enabled struct
    /// if and only if iformat/oformat.priv_class is not NULL.
    ///
    /// - muxing: set by avformat_write_header()
@@ -3633,11 +3633,11 @@ pub struct AVFormatContext {
     /// Flags modifying the (de)muxer behaviour. A combination of AVFMT_FLAG_*.
    /// Set by the user before avformat_open_input() / avformat_write_header().
     pub flags: libc::c_int,
-    /// Maximum size of the data read from input for determining
+    /// Maximum size of the common read from input for determining
    /// the input container format.
    /// Demuxing only, set by the caller before avformat_open_input().
     pub probesize: i64,
-    /// Maximum duration (in AV_TIME_BASE units) of the data read
+    /// Maximum duration (in AV_TIME_BASE units) of the common read
    /// from input in avformat_find_stream_info().
    /// Demuxing only, set by the caller before avformat_find_stream_info().
    /// Can be set to 0 to let avformat choose using a heuristic.
@@ -3835,7 +3835,7 @@ pub struct AVFormatContext {
    /// the same codec_id.
    /// Demuxing: Set by user
     pub subtitle_codec: *mut AVCodec,
-    /// Forced data codec.
+    /// Forced common codec.
    /// This allows forcing a specific decoder, even when there are multiple with
    /// the same codec_id.
    /// Demuxing: Set by user
@@ -3844,8 +3844,8 @@ pub struct AVFormatContext {
    /// Demuxing: Unused.
    /// Muxing: Set by user via av_format_set_metadata_header_padding.
     pub metadata_header_padding: libc::c_int,
-    /// User data.
-   /// This is a place for some private data of the user.
+    /// User common.
+   /// This is a place for some private common of the user.
     pub opaque: *mut libc::c_void,
     /// Callback used by devices to communicate with application.
     pub control_message_cb: av_format_control_message,

@@ -15,3 +15,4 @@ extern crate arrayvec;
 extern crate rust_ffmpeg;
 
 pub mod ffi;
+pub mod encode;

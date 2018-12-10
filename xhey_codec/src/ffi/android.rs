@@ -5,6 +5,10 @@ use jni::objects::JClass;
 use android_logger::Filter;
 use log::Level;
 use std::ptr;
+use jni::JavaVM;
+
+use std::thread;
+use std::sync::Arc;
 
 #[no_mangle]
 pub unsafe extern "C" fn Java_com_xhey_demo_XHeyCodec_initLogger(env: JNIEnv, _: JClass) {
