@@ -3,16 +3,27 @@ use std::sync::{Arc, Mutex, Condvar};
 
 #[derive(Debug)]
 pub struct AudioPacket {
-    pub samples: Vec<i16>,
-    pub size: usize
+    samples: Vec<u8>,
+    size: usize
 }
 
 impl AudioPacket {
-    pub fn new() -> AudioPacket {
+    pub fn new(samples_data: Vec<u8>, size: usize) -> AudioPacket {
+        let mut samples = Vec::<u8>::with_capacity(size);
+        unsafe { samples.set_len(size) };
+        samples.copy_from_slice(&samples_data);
         AudioPacket {
-            samples: Vec::<i16>::default(),
-            size: 0
+            samples,
+            size
         }
+    }
+
+    pub fn samples(&self) -> &Vec<u8> {
+        &self.samples
+    }
+
+    pub fn samples_size(&self) -> &usize {
+        &self.size
     }
 }
 
