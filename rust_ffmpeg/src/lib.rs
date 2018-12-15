@@ -3947,10 +3947,18 @@ extern "C" {
     pub fn av_codec_next(c: *const AVCodec) -> *mut AVCodec;
     pub fn avcodec_find_encoder(id: AVCodecID) -> *mut AVCodec;
     pub fn avcodec_find_encoder_by_name(name: *const libc::c_char) -> *mut AVCodec;
+    pub fn av_init_packet(pkt: *mut AVPacket);
+    pub fn av_packet_alloc() -> *mut AVPacket;
+    pub fn av_new_packet(pkt: *mut AVPacket, size: libc::c_int) -> libc::c_int;
+    pub fn avcodec_register_all();
+    pub fn avcodec_alloc_context3(codec: *const AVCodec) -> *mut AVCodecContext;
+    pub fn avcodec_encode_video2(avctx: *mut AVCodecContext, avpkt: *mut AVPacket, frame: *const AVFrame, got_packet_ptr: *mut libc::c_int) -> libc::c_int;
 }
 
 #[link(name = "avutil", kind = "static")]
 extern "C" {
     pub fn av_frame_set_pkt_pos(frame: *mut AVFrame, val: i64);
     pub fn av_frame_set_best_effort_timestamp(frame: *mut AVFrame, val: i64);
+    pub fn av_frame_alloc() -> *mut AVFrame;
+    pub fn av_image_alloc(pointers: *mut *mut u8, linesizes: *mut libc::c_int, w: libc::c_int, h: libc::c_int, pix_fmt: AVPixelFormat, align: libc::c_int) -> libc::c_int;
 }

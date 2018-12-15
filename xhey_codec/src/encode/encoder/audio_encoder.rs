@@ -2,10 +2,13 @@ use std::fs::File;
 use std::path::PathBuf;
 use std::sync::mpsc::Receiver;
 use crate::encode::common::packets::AudioPacket;
+use crate::encode::common::packets::SafelyPacketMgr;
 use std::thread;
 use std::io::BufWriter;
-use std::mem::transmute_copy;
 use std::io::Write;
+use std::mem;
+
+use rust_ffmpeg::*;
 
 pub struct PCMWriter {
     file_path: PathBuf,
@@ -41,3 +44,29 @@ impl PCMWriter {
     }
 
 }
+
+pub struct AudioEnc {
+    frame: Box<AVFrame>,
+    codec: Box<AVCodec>,
+    packet: Box<AVPacket>,
+    codec_context: Box<AVCodecContext>
+}
+
+//impl AudioEnc {
+//    pub fn new() -> AudioEnc {
+//        let frame = unsafe { av_frame_alloc() };
+//        unsafe {
+//            av_register_all();
+//        };
+//        frame.format = AVSampleFormat::AV_SAMPLE_FMT_S16;
+//        frame.nb_samples = 1024;
+//        frame.sample_rate = 44100;
+//        frame.channels = 1;
+//        let codec = unsafe { avcodec_find_encoder(AVCodecID::AV_CODEC_ID_AAC) };
+////        AudioEnc {
+////            frame,
+////            codec,
+////
+////        }
+//    }
+//}

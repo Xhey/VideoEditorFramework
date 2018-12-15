@@ -1,5 +1,21 @@
 use std::collections::VecDeque;
 use std::sync::{Arc, Mutex, Condvar};
+use std::mem;
+use rust_ffmpeg::*;
+pub use rust_ffmpeg::AVPacket;
+use libc::memset;
+
+pub trait SafelyPacketMgr {
+    fn new() -> Box<AVPacket> {
+        unsafe {
+            let mut packet = av_packet_alloc();
+            Box::new(*packet)
+        }
+    }
+}
+
+impl SafelyPacketMgr for AVPacket {}
+
 
 #[derive(Debug)]
 pub struct AudioPacket {
